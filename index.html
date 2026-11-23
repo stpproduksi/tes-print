@@ -103,7 +103,7 @@
 </div>
 
 <h1>Kitir SHEET EXTRUDER - TEST</h1>
-<div class="sub" style="color:#B91C1C;font-weight:700">⚠️ FILE TEST - Coba Print Cetak Ulang Saja - Tanpa RawBT</div>
+<div class="sub" style="color:#B91C1C;font-weight:700">⚠️ FILE TEST - Auto Sambung Printer - Tanpa RawBT</div>
 
 <div id="menuAtas" style="display:flex;gap:6px">
   <button id="tabForm" class="btn" onclick="tabKitir('form')">Input Hasil</button>
@@ -445,7 +445,7 @@ function kitirSimpan(){
   });
 }
 
-/* ===== PRINT BARU - CUMA BAGIAN INI YANG DIRUBAH ===== */
+/* ===== PRINT BARU - WEB BLUETOOTH + AUTO SAMBUNG ===== */
 
 function kitirBuatRawText(d, ulang){
   var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -505,6 +505,35 @@ async function pilihPrinter(){
   }
 }
 
+// Auto sambung ke printer yang terakhir dipilih, tanpa buka picker lagi
+async function autoSambungPrinter(){
+  try{
+    if(!navigator.bluetooth || !navigator.bluetooth.getDevices) return false;
+    var devices = await navigator.bluetooth.getDevices();
+    if(!devices.length) return false;
+    printerDevice = devices[0];
+    var server = await printerDevice.gatt.connect();
+    var services = await server.getPrimaryServices();
+    printerCharacteristic = null;
+    for(var s of services){
+      var chars = await s.getCharacteristics();
+      for(var c of chars){
+        if(c.properties.write || c.properties.writeWithoutResponse){
+          printerCharacteristic = c;
+          break;
+        }
+      }
+      if(printerCharacteristic) break;
+    }
+    if(printerCharacteristic){
+      printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
+      if($('msg')){ $('msg').textContent='Printer otomatis tersambung: ' + printerDevice.name; $('msg').className='ok'; }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 function teksKeESCpos(teks){
   var enc = new TextEncoder();
   var data = enc.encode(teks);
@@ -518,6 +547,12 @@ function teksKeESCpos(teks){
 async function kirimKePrinter(d, ulang){
   var msgEl=$('msg');
   var teks = kitirBuatRawText(d, ulang);
+
+  // Kalau belum tersambung, coba auto-sambung dulu ke printer terakhir
+  if(!printerCharacteristic){
+    await autoSambungPrinter();
+  }
+
   if(printerCharacteristic && printerDevice && printerDevice.gatt.connected){
     try{
       var bytes = teksKeESCpos(teks);
@@ -539,7 +574,6 @@ async function kirimKePrinter(d, ulang){
     if(printerCharacteristic){ kirimKePrinter(d, ulang); }
     return;
   }
-  // Fallback kalau browser tidak ada Bluetooth - tetap pakai cara lama
   kitirIsiPreview(d, ulang);
   setTimeout(function(){ window.print(); }, 300);
 }
