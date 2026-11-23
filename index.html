@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TEST - Kitir SHEET</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1D4E89">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-title" content="Kitir Ext TEST">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+  :root{ --bg:#F3F4F6; --card:#FFFFFF; --ink:#14181F; --mute:#5B6472; --line:#E3E6EA; --accent:#1D4E89; --good:#157F3C; --bad:#B91C1C; }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{ font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); padding:18px; }
+  h1{ font-size:16px; font-weight:800; margin:0 0 2px; } .sub{ font-size:11px; color:var(--mute); margin-bottom:16px; }
+  #formCard{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; max-width:420px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--mute); margin-bottom:5px; }
+  .field input, .field select{ width:100%; padding:11px 12px; font-size:15px; border:1px solid var(--line); border-radius:7px; background:#fff; }
+  .field input:focus, .field select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,78,137,.15); }
+  .field input:disabled, .field select:disabled{ background:#F3F4F6; color:var(--mute); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .btn{ width:100%; padding:13px; font-size:14px; font-weight:700; border:none; border-radius:8px; color:#fff; cursor:pointer; margin-top:8px; background:#1D4E89; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  #btnSave{ margin-top:4px; }
+  #btnPrint{ background:#B45309; }
+  #btnPrinter{ background:#0F766E; }
+  #btnShareWA{ background:#25D366; }
+  #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
+  #msg{ font-size:12.5px; margin-top:10px; min-height:16px; } #msg.ok{ color:var(--good); font-weight:700; } #msg.bad{ color:var(--bad); font-weight:700; }
+
+  #ulangPanel{ display:none; margin-top:16px; max-width:420px; border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
+  .ul-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .ul-head b{ font-size:14px; }
+  .ul-head button{ background:none; border:none; font-size:13px; color:var(--mute); cursor:pointer; font-weight:700; }
+  .ul-cari{ display:flex; gap:8px; margin-bottom:10px; }
+  .ul-cari input{ flex:1; padding:10px 12px; font-size:15px; border:1px solid var(--line); border-radius:7px; }
+  .ul-cari button{ padding:10px 16px; font-size:14px; font-weight:700; border:none; border-radius:7px; background:var(--accent); color:#fff; cursor:pointer; }
+  #ulangList{ max-height:380px; overflow-y:auto; }
+  .ul-item{ border:1px solid var(--line); border-radius:8px; padding:9px 10px; margin-bottom:8px; font-size:12.5px; }
+  .ul-item .t{ font-weight:700; font-size:13px; }
+  .ul-item .s{ color:var(--mute); font-size:11.5px; margin-top:2px; }
+  .badge{ display:inline-block; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; vertical-align:middle; }
+  .badge.belum{ background:#FEF3C7; color:#92400E; }
+  .badge.sudah{ background:#DCFCE7; color:#166534; }
+  .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+
+  .card{ background:#fff; border-radius:12px; padding:12px; margin:8px 0; box-shadow:0 1px 3px #0002; }
+  #menuAtas{ max-width:420px; margin-bottom:12px; flex-wrap:wrap; }
+  #menuAtas .btn{ margin:0; flex:1 1 30%; background:#1D4E89; color:#fff; border:none; opacity:.75; }
+  #menuAtas .btn.on{ background:#F59E0B; color:#14181F; opacity:1; }
+  #panelLihat .btn, #panelEdit .btn, #panelHapus .btn{ background:#1D4E89; color:#fff; border:none; }
+  .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+  .lh-row b{ font-family:'Roboto Mono',monospace; }
+
+  #edForm{ display:none; border-top:2px solid var(--accent); margin-top:12px; padding-top:12px; }
+
+  #login{position:fixed;inset:0;background:#F3F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:99}
+  #login .logo-besar{width:180px;height:180px;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0002;margin-bottom:12px}
+  #login h2{font-size:18px;margin:0 0 16px;color:#1D4E89}
+  #login input{max-width:260px;text-align:center;font-size:22px;letter-spacing:6px;width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}
+  #login .btn{max-width:260px;width:100%}
+
+  #kitirPrintArea{ display:none; }
+  .kitir{ width:54mm; margin:0; font-family:'Roboto Mono', monospace; color:#000; padding:0; }
+  .kitir .brand{ text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.08em; }
+  .kitir .judul{ text-align:center; font-size:11.5px; font-weight:700; margin:1px 0 3px; }
+  .kitir .tag{ text-align:center; font-size:11px; font-weight:700; }
+  .kitir hr{ border:none; border-top:1px dashed #000; margin:3px 0; }
+  .kitir .ref{ text-align:center; font-size:11px; font-weight:700; margin:1px 0 3px; }
+  .kitir .nama{ text-align:center; font-size:12px; font-weight:700; margin:3px 0; word-break:break-word; }
+  .kitir .berat-wrap{ text-align:center; margin:4px 0; }
+  .kitir .berat-wrap .lbl{ font-size:8.5px; letter-spacing:.08em; }
+  .kitir .berat-wrap .val{ font-size:20px; font-weight:700; line-height:1.1; }
+  .kitir .rute{ text-align:center; font-size:14px; font-weight:700; margin:3px 0; }
+  .kitir .foot{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-top:3px; }
+  .kitir .barcode-wrap{ text-align:center; margin-top:5px; }
+  .kitir .barcode-wrap svg{ max-width:52mm; height:24mm; }
+  @media print{
+    body *{ visibility:hidden; }
+    #kitirPrintArea, #kitirPrintArea *{ visibility:visible; }
+    #kitirPrintArea{ display:block; position:absolute; top:0; left:0; }
+    @page{ size:58mm auto; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <img src="logo-192.png" alt="Logo STP" class="logo-besar">
+  <h2>* KITIR EXT TEST *</h2>
+  <input id="pin" type="password" inputmode="numeric" placeholder="PIN" maxlength="8"
+         onkeydown="if(event.key==='Enter')masukPin()">
+  <button class="btn" onclick="masukPin()">MASUK</button>
+  <div id="login_msg" class="bad" style="margin-top:10px"></div>
+</div>
+
+<h1>Kitir SHEET EXTRUDER - TEST</h1>
+<div class="sub" style="color:#B91C1C;font-weight:700">⚠️ FILE TEST - Coba Print Cetak Ulang Saja - Tanpa RawBT</div>
+
+<div id="menuAtas" style="display:flex;gap:6px">
+  <button id="tabForm" class="btn" onclick="tabKitir('form')">Input Hasil</button>
+  <button id="tabLihat" class="btn" onclick="tabKitir('lihat')">Rincian Hasil</button>
+  <button id="tabEdit" class="btn" onclick="tabKitir('edit')">Edit EXT</button>
+  <button id="tabHapus" class="btn" onclick="tabKitir('hapus')">Hapus EXT</button>
+</div>
+
+<!-- RINCIAN HASIL -->
+<div id="panelLihat" class="card" style="display:none;max-width:420px">
+  <div class="row2">
+    <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="leTgl"></div>
+    <div class="field" style="margin:0"><label>Shift</label>
+      <select id="leShift"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:10px" onclick="leCari()">TAMPILKAN</button>
+  <div id="leBox" style="margin-top:8px"></div>
+</div>
+
+<!-- EDIT EXT -->
+<div id="panelEdit" class="card" style="display:none;max-width:420px">
+  <div class="row2">
+    <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="edTgl"></div>
+    <div class="field" style="margin:0"><label>Shift</label>
+      <select id="edShift"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:10px" onclick="edTampil()">TAMPILKAN</button>
+  <div id="edList" style="margin-top:8px"></div>
+
+  <div id="edForm">
+    <b>Edit data EXT</b>
+    <input type="hidden" id="edRow">
+    <input type="hidden" id="edCarsheetAsli">
+    <div class="field" style="margin-top:10px"><label>No. Carsheet</label><input type="text" id="eCarsheet"></div>
+    <div class="row2">
+      <div class="field"><label>Tanggal</label><input type="date" id="eTanggal"></div>
+      <div class="field"><label>Shift</label><select id="eShift"><option value="1">Shift 1</option><option value="2">Shift 2</option><option value="3">Shift 3</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Ext</label><select id="eExt"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+      <div class="field"><label>Untuk TF</label><select id="eUntukTf"><option>TF04</option><option>TF05</option><option>TF07</option><option>TF08</option><option>TF09</option><option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option></select></div>
+    </div>
+    <div class="field"><label>Ukuran</label><select id="eUkuran"></select></div>
+    <div class="row2">
+      <div class="field"><label>Nama Operator</label><select id="eNama"></select></div>
+      <div class="field"><label>Jam</label><input type="time" id="eJam"></div>
+    </div>
+    <div class="field"><label>Berat (kg)</label><input type="number" id="eBerat" step="0.01" inputmode="decimal"></div>
+    <button class="btn" style="background:#157F3C" onclick="edSimpan()">SIMPAN PERUBAHAN</button>
+    <button class="btn" style="background:#fff;color:#5B6472;border:1px solid #E3E6EA" onclick="edBatal()">Batal</button>
+    <div id="edMsg" style="margin-top:8px;font-size:13px"></div>
+  </div>
+</div>
+
+<!-- HAPUS EXT -->
+<div id="panelHapus" class="card" style="display:none;max-width:420px">
+  <div class="row2">
+    <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="hpTgl"></div>
+    <div class="field" style="margin:0"><label>Shift</label>
+      <select id="hpShift"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:10px" onclick="hpTampil()">TAMPILKAN</button>
+  <div id="hpMsg" style="margin-top:8px;font-size:13px"></div>
+  <div id="hpList" style="margin-top:8px"></div>
+</div>
+
+<!-- INPUT HASIL -->
+<div id="formCard">
+  <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
+  <div class="row2">
+    <div class="field"><label>Tanggal</label><input type="date" id="fTanggal"></div>
+    <div class="field"><label>Shift</label><select id="fShift"><option value="">- pilih -</option><option value="1">Shift 1</option><option value="2">Shift 2</option><option value="3">Shift 3</option></select></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Ext</label><select id="fExt"><option value="">- pilih -</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+    <div class="field"><label>Untuk TF</label><select id="fUntukTf"><option value="">- pilih -</option><option>TF04</option><option>TF05</option><option>TF07</option><option>TF08</option><option>TF09</option><option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option></select></div>
+  </div>
+  <div class="field"><label>Ukuran</label><select id="fUkuran"><option value="">- memuat daftar -</option></select></div>
+  <div class="field"><label>Nama Operator</label><select id="fNama"></select></div>
+  <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+
+  <button id="btnPrinter" class="btn" onclick="pilihPrinter()">🔵 Pilih Printer Bluetooth</button>
+  <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
+  <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
+  <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
+  <button id="btnUlang" class="btn" onclick="kitirBukaUlang()">Cari Cetak Ulang</button>
+  <button id="btnReset" class="btn" onclick="kitirResetForm()">Kosongkan Form</button>
+  <div id="msg"></div>
+</div>
+
+<div id="ulangPanel">
+  <div class="ul-head">
+    <b>Cari Cetak Ulang</b>
+    <button type="button" onclick="kitirTutupUlang()">Tutup ✕</button>
+  </div>
+  <div class="ul-cari">
+    <input type="text" id="ulCari" placeholder="Ketik no. carsheet" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter'){kitirCariUlang();}">
+    <button type="button" onclick="kitirCariUlang()">Cari</button>
+  </div>
+  <div id="ulangList"></div>
+</div>
+
+<div id="kitirPrintArea">
+  <div class="kitir">
+    <div class="brand">STP</div>
+    <div class="judul">KITIR SHEET</div>
+    <div class="tag" id="pTag"></div>
+    <div class="ref" id="pCarsheet">No. Carsheet: -</div>
+    <hr>
+    <div class="nama" id="pUkuran">-</div>
+    <div class="berat-wrap"><div class="lbl">BERAT</div><div class="val" id="pBerat">-</div></div>
+    <div class="rute" id="pRute">-</div>
+    <hr>
+    <div class="foot"><span id="pTanggal">-</span><span id="pShift">-</span></div>
+    <div class="foot"><span>Operator:</span><span id="pNama">-</span></div>
+    <div class="barcode-wrap"><svg id="pBarcode"></svg></div>
+  </div>
+</div>
+
+<script>
+// Service Worker DIMATIKAN di file TEST saja, biar tidak bentrok cache dengan index.html lama
+// if ('serviceWorker' in navigator){
+//   window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
+// }
+
+var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
+var KITIR_KEY='kitirSaved_TEST';
+var KEY='';
+var MENU_USER=[];
+var kitirState=null;
+var kitirDraft=null;
+var ulangCache=[];
+var leRekap='';
+var UKURAN_LIST=[];
+var EDIT_CACHE=[];
+var HAPUS_CACHE=[];
+var OPERATOR_LIST=['Agus','Edo','Singgih','Viky'];
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmtN(n){ return Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:2}); }
+function hariIni(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function jamSekarang(){ var n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+
+function apiGet(params){
+  var q=new URLSearchParams(Object.assign({k:KEY}, params));
+  return fetch(WEBAPP_URL+'?'+q.toString()).then(function(r){ return r.json(); });
+}
+
+/* ===== LOGIN ===== */
+
+function masukPin(){
+  var p=$('pin').value.trim();
+  if(!p){ $('login_msg').textContent='Masukkan PIN'; return; }
+  KEY=p;
+  apiGet({action:'login'}).then(function(r){
+    if(!r.ok){ KEY=''; $('login_msg').textContent=r.error||'PIN salah'; return; }
+    MENU_USER=r.menu;
+    $('tabForm').style.display = MENU_USER.indexOf('ext')>=0 ? '' : 'none';
+    $('tabLihat').style.display = MENU_USER.indexOf('ext')>=0 ? '' : 'none';
+    $('tabEdit').style.display = MENU_USER.indexOf('editext')>=0 ? '' : 'none';
+    $('tabHapus').style.display = MENU_USER.indexOf('hapusext')>=0 ? '' : 'none';
+    $('login').style.display='none';
+    $('pin').value='';
+    $('login_msg').textContent='';
+    tabKitir(MENU_USER.indexOf('ext')>=0 ? 'lihat' : 'edit');
+    kitirMuatDaftarUkuran();
+  }).catch(function(e){ KEY=''; $('login_msg').textContent='Gagal: '+e.message; });
+}
+
+/* ===== MENU ===== */
+
+function tabKitir(t){
+  var form=t==='form', lihat=t==='lihat', edit=t==='edit', hapus=t==='hapus';
+  $('formCard').style.display = form ? '' : 'none';
+  $('ulangPanel').style.display = 'none';
+  $('panelLihat').style.display = lihat ? 'block' : 'none';
+  $('panelEdit').style.display = edit ? 'block' : 'none';
+  $('panelHapus').style.display = hapus ? 'block' : 'none';
+  $('tabForm').classList.toggle('on', form);
+  $('tabLihat').classList.toggle('on', lihat);
+  $('tabEdit').classList.toggle('on', edit);
+  $('tabHapus').classList.toggle('on', hapus);
+  if(lihat && !$('leTgl').value) $('leTgl').value=$('fTanggal').value;
+  if(edit && !$('edTgl').value) $('edTgl').value=$('fTanggal').value;
+  if(hapus && !$('hpTgl').value) $('hpTgl').value=$('fTanggal').value;
+}
+
+/* ===== FORM OPERATOR & UKURAN ===== */
+
+function isiOperator(selId, nilai){
+  var sel=$(selId);
+  var list=OPERATOR_LIST.slice();
+  if(nilai && list.indexOf(nilai)===-1) list.push(nilai);
+  sel.innerHTML='<option value="">- pilih -</option>'+list.sort(function(a,b){ return a.localeCompare(b,'id'); })
+    .map(function(n){ return '<option value="'+esc(n)+'"'+(n===nilai?' selected':'')+'>'+esc(n)+'</option>'; }).join('');
+}
+isiOperator('fNama');
+
+function isiUkuran(selId, nilai){
+  var sel=$(selId);
+  var list=UKURAN_LIST.slice();
+  if(nilai && list.indexOf(nilai)===-1) list.push(nilai);
+  sel.innerHTML='<option value="">- pilih -</option>'+list.map(function(v){
+    return '<option value="'+esc(v)+'"'+(v===nilai?' selected':'')+'>'+esc(v)+'</option>';
+  }).join('');
+}
+
+function kitirMuatDaftarUkuran(){
+  apiGet({action:'ukuranList'}).then(function(res){
+    UKURAN_LIST = (res&&res.ok) ? (res.items||[]) : [];
+    isiUkuran('fUkuran', '');
+  }).catch(function(){
+    $('fUkuran').innerHTML='<option value="">- gagal memuat -</option>';
+  });
+}
+
+function kitirSetDefaultTanggal(){ $('fTanggal').value=hariIni(); }
+kitirSetDefaultTanggal();
+
+/* ===== INPUT HASIL ===== */
+
+function kitirNewSid(){ return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function kitirSetFormLocked(on){
+  ['fCarsheet','fTanggal','fShift','fExt','fUntukTf','fUkuran','fNama','fBerat'].forEach(function(id){
+    $(id).disabled=on;
+  });
+}
+
+function kitirTampilSudahSimpan(){
+  kitirSetFormLocked(true);
+  $('btnSave').disabled=true;
+  $('btnPrint').disabled=false;
+  $('btnShareWA').disabled=false;
+}
+
+function kitirAmbilForm(){
+  return {
+    _app:'ext',
+    carsheet: $('fCarsheet').value.trim(),
+    tanggal: $('fTanggal').value,
+    jam: jamSekarang(),
+    shift: $('fShift').value,
+    ext: $('fExt').value,
+    ukuran: $('fUkuran').value.trim(),
+    untukTf: $('fUntukTf').value,
+    berat: $('fBerat').value,
+    nama: $('fNama').value.trim()
+  };
+}
+
+function kitirValidasi(d){
+  if(!d.carsheet) return 'No. Carsheet belum diisi.';
+  if(!d.tanggal) return 'Tanggal belum diisi.';
+  if(!d.shift) return 'Shift belum dipilih.';
+  if(!d.ext) return 'Ext belum dipilih.';
+  if(!d.ukuran) return 'Ukuran belum dipilih.';
+  if(!d.untukTf) return 'Untuk TF belum dipilih.';
+  if(!d.berat||isNaN(parseFloat(d.berat))||parseFloat(d.berat)<=0) return 'Berat belum valid.';
+  if(!d.nama) return 'Nama operator belum diisi.';
+  return null;
+}
+
+function kitirFmtTanggal(iso){
+  if(!iso) return '';
+  var p=String(iso).split('-');
+  return p.length===3 ? p[2]+'-'+p[1]+'-'+p[0] : String(iso);
+}
+
+function kitirIsiPreview(d, ulang){
+  $('pTag').textContent = ulang ? '** CETAK ULANG **' : '';
+  $('pCarsheet').textContent='No. Carsheet: '+d.carsheet;
+  $('pNama').textContent=d.nama;
+  $('pUkuran').textContent=d.ukuran;
+  $('pBerat').textContent=Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
+  $('pRute').textContent='EXT '+d.ext+' → '+d.untukTf;
+  $('pTanggal').textContent=kitirFmtTanggal(d.tanggal)+' '+d.jam;
+  $('pShift').textContent='SHIFT '+d.shift;
+  try{
+    JsBarcode("#pBarcode", String(d.carsheet), {format:"CODE128", width:1.6, height:55, displayValue:true, fontSize:11, margin:2});
+  }catch(e){
+    $('pBarcode').innerHTML='';
+  }
+}
+
+function kitirBuatPesanWA_TextBiasa(d){
+  var tgl=kitirFmtTanggal(d.tanggal)+' '+d.jam;
+  var berat=Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return "LAPORAN EXT\n"+
+    "No. Carsheet : "+d.carsheet+"\n"+
+    "Tgl : "+tgl+"\n"+
+    "Shift : "+d.shift+"\n"+
+    "EXT : "+d.ext+" -> "+d.untukTf+"\n"+
+    "Ukuran : "+d.ukuran+"\n"+
+    "Berat : "+berat+" kg\n"+
+    "KR Extruder : "+d.nama+"\n";
+}
+
+function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
+
+function kitirSimpan(){
+  var msgEl=$('msg');
+  if(kitirState){ msgEl.textContent='Data sudah tersimpan. Pakai Cetak, atau Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
+
+  var data=kitirAmbilForm();
+  var err=kitirValidasi(data);
+  if(err){ msgEl.textContent=err; msgEl.className='bad'; return; }
+
+  var json=JSON.stringify(data);
+  if(!kitirDraft||kitirDraft.json!==json){ kitirDraft={sid:kitirNewSid(), json:json}; }
+  data.sid=kitirDraft.sid;
+  var sid=kitirDraft.sid;
+
+  var btn=$('btnSave');
+  btn.disabled=true; msgEl.textContent='Menyimpan...'; msgEl.className='';
+
+  apiGet({action:'save', payload:JSON.stringify(data)}).then(function(res){
+    if(res&&res.ok){
+      kitirState={data:data, sid:sid};
+      kitirDraft=null;
+      try{ localStorage.setItem(KITIR_KEY, JSON.stringify(kitirState)); }catch(e){}
+      kitirIsiPreview(data,false);
+      kitirTampilSudahSimpan();
+      msgEl.textContent=(res.duplicate?'Data sudah tersimpan sebelumnya. ':'Tersimpan. ')+'Tekan Cetak jika struk belum keluar.';
+      msgEl.className='ok';
+    }else{
+      btn.disabled=false;
+      msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui')+'. Tekan Simpan lagi, data tidak akan ganda.';
+      msgEl.className='bad';
+    }
+  }).catch(function(err){
+    btn.disabled=false;
+    msgEl.textContent='Gagal: '+(err&&err.message?err.message:err)+'. Tekan Simpan lagi, data tidak akan ganda.';
+    msgEl.className='bad';
+  });
+}
+
+/* ===== PRINT BARU - CUMA BAGIAN INI YANG DIRUBAH ===== */
+
+function kitirBuatRawText(d, ulang){
+  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
+  return "STP\n" +
+    "KITIR SHEET\n" +
+    (ulang ? "** CETAK ULANG **\n" : "") +
+    "No. Carsheet: "+d.carsheet+"\n" +
+    "--------------------------------\n" +
+    d.ukuran+"\n" +
+    "BERAT\n" +
+    berat+" kg\n" +
+    "EXT "+d.ext+" -> "+d.untukTf+"\n" +
+    "--------------------------------\n" +
+    tgl+"  SHIFT "+d.shift+"\n" +
+    "Operator: "+d.nama+"\n" +
+    d.carsheet+"\n" +
+    "\n\n\n";
+}
+
+var printerDevice = null;
+var printerCharacteristic = null;
+
+async function pilihPrinter(){
+  var msgEl=$('msg');
+  if(!navigator.bluetooth){
+    msgEl.textContent='HP / browser ini tidak dukung Web Bluetooth. Buka lewat Chrome Android.';
+    msgEl.className='bad';
+    return;
+  }
+  try{
+    msgEl.textContent='Mencari printer...'; msgEl.className='';
+    printerDevice = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb']
+    });
+    var server = await printerDevice.gatt.connect();
+    var services = await server.getPrimaryServices();
+    printerCharacteristic = null;
+    for(var s of services){
+      var chars = await s.getCharacteristics();
+      for(var c of chars){
+        if(c.properties.write || c.properties.writeWithoutResponse){
+          printerCharacteristic = c;
+          break;
+        }
+      }
+      if(printerCharacteristic) break;
+    }
+    if(!printerCharacteristic) throw new Error('Characteristic print tidak ketemu di printer ini');
+    printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
+    msgEl.textContent='Printer tersambung: ' + printerDevice.name;
+    msgEl.className='ok';
+  }catch(e){
+    msgEl.textContent='Gagal pilih printer: ' + e.message;
+    msgEl.className='bad';
+  }
+}
+
+function teksKeESCpos(teks){
+  var enc = new TextEncoder();
+  var data = enc.encode(teks);
+  var out = new Uint8Array(2 + data.length + 3);
+  out[0]=0x1B; out[1]=0x40;
+  out.set(data, 2);
+  out[2+data.length]=0x0A; out[3+data.length]=0x0A; out[4+data.length]=0x0A;
+  return out;
+}
+
+async function kirimKePrinter(d, ulang){
+  var msgEl=$('msg');
+  var teks = kitirBuatRawText(d, ulang);
+  if(printerCharacteristic && printerDevice && printerDevice.gatt.connected){
+    try{
+      var bytes = teksKeESCpos(teks);
+      for(var i=0;i<bytes.length;i+=20){
+        await printerCharacteristic.writeValueWithoutResponse(bytes.slice(i, i+20));
+        await new Promise(function(r){ setTimeout(r, 30); });
+      }
+      if(msgEl){ msgEl.textContent='Terkirim ke printer.'; msgEl.className='ok'; }
+      return;
+    }catch(e){
+      if(msgEl){ msgEl.textContent='Gagal print: ' + e.message + ' - Pilih printer lagi.'; msgEl.className='bad'; }
+      printerCharacteristic = null;
+      return;
+    }
+  }
+  if(navigator.bluetooth){
+    if(msgEl){ msgEl.textContent='Pilih printer dulu di tombol biru.'; msgEl.className='bad'; }
+    await pilihPrinter();
+    if(printerCharacteristic){ kirimKePrinter(d, ulang); }
+    return;
+  }
+  // Fallback kalau browser tidak ada Bluetooth - tetap pakai cara lama
+  kitirIsiPreview(d, ulang);
+  setTimeout(function(){ window.print(); }, 300);
+}
+
+function kitirCetak(){
+  var msgEl=$('msg');
+  if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
+  kirimKePrinter(kitirState.data, false);
+}
+
+function kitirShareWA(){
+  var msgEl=$('msg');
+  if(!kitirState){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
+  kitirShareKeWA(kitirBuatPesanWA_TextBiasa(kitirState.data));
+  msgEl.textContent='WhatsApp dibuka. Data masih ada di form.'; msgEl.className='ok';
+}
+
+function kitirResetForm(){
+  kitirState=null;
+  kitirDraft=null;
+  try{ localStorage.removeItem(KITIR_KEY); }catch(e){}
+  ['fCarsheet','fShift','fExt','fUntukTf','fNama','fUkuran','fBerat'].forEach(function(id){ $(id).value=''; });
+  kitirSetDefaultTanggal();
+  kitirSetFormLocked(false);
+  $('btnSave').disabled=false;
+  $('btnPrint').disabled=true;
+  $('btnShareWA').disabled=true;
+  $('msg').textContent=''; $('msg').className='';
+}
+
+/* ===== CARI CETAK ULANG ===== */
+
+function kitirBukaUlang(){
+  var p=$('ulangPanel');
+  p.style.display='block';
+  $('ulCari').focus();
+  p.scrollIntoView({behavior:'smooth'});
+}
+
+function kitirTutupUlang(){ $('ulangPanel').style.display='none'; }
+
+function kitirCariUlang(){
+  var kode=$('ulCari').value.trim();
+  var list=$('ulangList');
+  if(!kode){ list.innerHTML='<div class="bad">Ketik no. carsheet dulu.</div>'; return; }
+  list.innerHTML='<div style="color:var(--mute);font-size:12.5px">Mencari...</div>';
+  apiGet({action:'extList', carsheet:kode}).then(function(res){
+    if(!res||!res.ok){ list.innerHTML='<div class="bad">'+esc(res&&res.error?res.error:'Tidak ditemukan')+'</div>'; return; }
+    ulangCache=res.items||[];
+    kitirRenderUlang();
+  }).catch(function(e){ list.innerHTML='<div class="bad">Gagal mencari: '+esc(e.message)+'</div>'; });
+}
+
+function kitirRenderUlang(){
+  var list=$('ulangList');
+  if(!ulangCache.length){ list.innerHTML='<div style="color:var(--mute);font-size:12.5px">Carsheet tidak ditemukan.</div>'; return; }
+  list.innerHTML=ulangCache.map(function(it,idx){
+    var badge = it.status==='BELUM' ? '<span class="badge belum">Belum di TF</span>' : '<span class="badge sudah">Sudah di TF</span>';
+    return '<div class="ul-item">'+
+      '<div class="t">'+esc(it.carsheet)+badge+'</div>'+
+      '<div class="s">'+esc(it.ukuran)+' | '+esc(it.berat)+' kg</div>'+
+      '<div class="s">EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+'</div>'+
+      '<div class="s">Operator: '+esc(it.nama)+'</div>'+
+      '<button type="button" onclick="kitirCetakUlang('+idx+')">🖨 Cetak Ulang</button>'+
+      '</div>';
+  }).join('');
+}
+
+function kitirCetakUlang(idx){
+  var it=ulangCache[idx];
+  if(!it) return;
+  var d={
+    tanggal: it.tglIso || hariIni(),
+    jam: it.jam,
+    shift: it.shift,
+    ext: it.ext,
+    untukTf: it.untukTf,
+    ukuran: it.ukuran,
+    berat: it.berat,
+    nama: it.nama,
+    carsheet: it.carsheet
+  };
+  kirimKePrinter(d, true);
+}
+
+/* ===== RINCIAN HASIL ===== */
+
+function leKelompok(items){
+  var kr={};
+  items.forEach(function(it){
+    var n=it.nama||'-', g='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
+    if(!kr[n]) kr[n]={total:0, count:0, grup:{}};
+    if(!kr[n].grup[g]) kr[n].grup[g]={total:0, rows:[]};
+    kr[n].total+=b; kr[n].count++;
+    kr[n].grup[g].total+=b; kr[n].grup[g].rows.push(it);
+  });
+  return kr;
+}
+
+function leBuatTeks(tgl, shift, kr, grand, jumlah){
+  var t='📊 LAPORAN EXT\nTanggal: '+kitirFmtTanggal(tgl)+' | Shift: '+(shift||'Semua')+'\n';
+  Object.keys(kr).sort().forEach(function(n){
+    var k=kr[n];
+    t+='\nKR '+n+'\nTOTAL '+fmtN(k.total)+' kg\n'+k.count+' carsheet\n';
+    Object.keys(k.grup).sort().forEach(function(g){
+      var gr=k.grup[g];
+      t+='\n'+g+'   '+fmtN(gr.total)+' kg\n';
+      gr.rows.forEach(function(it){ t+=it.ukuran+' / '+fmtN(it.berat)+' kg\n'; });
+    });
+    t+='\n';
+  });
+  t+='GRAND TOTAL '+fmtN(grand)+' kg ('+jumlah+' carsheet)';
+  return t;
+}
+
+function leHtml(kr, grand, jumlah){
+  var h=Object.keys(kr).sort().map(function(n){
+    var k=kr[n];
+    var grp=Object.keys(k.grup).sort().map(function(g){
+      var gr=k.grup[g];
+      return '<div style="margin-top:8px"><b>'+esc(g)+'&nbsp;&nbsp;&nbsp;'+fmtN(gr.total)+' kg</b></div>'+
+        gr.rows.map(function(it){ return '<div>'+esc(it.ukuran)+' / '+fmtN(it.berat)+' kg</div>'; }).join('');
+    }).join('');
+    return '<div class="card" style="font-family:monospace">'+
+      '<div style="font-size:15px;font-weight:bold">KR '+esc(n)+'</div>'+
+      '<div style="font-weight:bold">TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(k.total)+' kg</div>'+
+      '<div style="font-size:12px;color:#5B6472">'+k.count+' carsheet</div>'+
+      grp+'</div>';
+  }).join('');
+  return h+'<div class="card" style="font-family:monospace;font-size:15px;font-weight:bold">'+
+    'GRAND TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
+    '<small style="font-weight:normal">'+jumlah+' carsheet</small></div>';
+}
+
+function leShareWa(){
+  if(!leRekap){ alert('Tampilkan data dulu'); return; }
+  window.open('https://wa.me/?text='+encodeURIComponent(leRekap),'_blank');
+}
+
+function leCari(){
+  var tgl=$('leTgl').value, shift=$('leShift').value;
+  var box=$('leBox');
+  if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
+  box.innerHTML='Memuat...';
+  apiGet({action:'extFilter', tgl:tgl, shift:shift}).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+    if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
+    var kr=leKelompok(res.items), grand=0;
+    res.items.forEach(function(it){ grand+=Number(it.berat)||0; });
+    leRekap=leBuatTeks(tgl, shift, kr, grand, res.items.length);
+    box.innerHTML=leHtml(kr, grand, res.items.length)+
+      '<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
+  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+}
+
+/* ===== EDIT EXT ===== */
+
+function edTampil(){
+  var tgl=$('edTgl').value, shift=$('edShift').value;
+  var box=$('edList');
+  if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
+  box.innerHTML='Memuat...';
+  $('edForm').style.display='none';
+  apiGet({action:'extEditList', tgl:tgl, shift:shift}).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+    EDIT_CACHE=res.items||[];
+    if(!EDIT_CACHE.length){ box.innerHTML='Tidak ada data.'; return; }
+    box.innerHTML=EDIT_CACHE.map(function(it,idx){
+      return '<div class="ul-item">'+
+        '<div class="t">'+esc(it.carsheet)+' | '+esc(it.ukuran)+' | '+fmtN(it.berat)+' kg</div>'+
+        '<div class="s">EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+'</div>'+
+        '<div class="s">KR: '+esc(it.nama)+'</div>'+
+        '<button type="button" onclick="edPilih('+idx+')">✏️ Edit</button>'+
+        '</div>';
+    }).join('');
+  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+}
+
+function edPilih(idx){
+  var it=EDIT_CACHE[idx];
+  if(!it) return;
+  $('edRow').value=it.row;
+  $('edCarsheetAsli').value=it.carsheet;
+  $('eCarsheet').value=it.carsheet;
+  $('eTanggal').value=it.tanggal;
+  $('eShift').value=it.shift;
+  $('eExt').value=it.ext;
+  $('eUntukTf').value=it.untukTf;
+  isiUkuran('eUkuran', it.ukuran);
+  isiOperator('eNama', it.nama);
+  $('eJam').value=it.jam;
+  $('eBerat').value=it.berat;
+  $('edMsg').textContent='';
+  $('edForm').style.display='block';
+  $('edForm').scrollIntoView({behavior:'smooth'});
+}
+
+function edBatal(){
+  $('edForm').style.display='none';
+  $('edMsg').textContent='';
+}
+
+function edSimpan(){
+  var msg=$('edMsg');
+  var d={
+    row:$('edRow').value,
+    carsheetAsli:$('edCarsheetAsli').value,
+    carsheet:$('eCarsheet').value.trim(),
+    tanggal:$('eTanggal').value,
+    shift:$('eShift').value,
+    ext:$('eExt').value,
+    untukTf:$('eUntukTf').value,
+    ukuran:$('eUkuran').value,
+    berat:$('eBerat').value,
+    nama:$('eNama').value,
+    jam:$('eJam').value
+  };
+  if(!d.carsheet||!d.tanggal||!d.shift||!d.ukuran||!d.nama||!d.jam||!d.berat){
+    msg.className='bad'; msg.textContent='Semua kolom wajib diisi.'; return;
+  }
+  msg.className=''; msg.textContent='Menyimpan...';
+  apiGet({action:'extEditSimpan', payload:JSON.stringify(d)}).then(function(res){
+    if(res.ok){
+      msg.className='ok'; msg.textContent='✅ Perubahan tersimpan.';
+      $('edForm').style.display='none';
+      edTampil();
+    }else{
+      msg.className='bad'; msg.textContent='❌ Gagal: '+(res.error||'tidak diketahui');
+    }
+  }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
+}
+
+/* ===== HAPUS EXT ===== */
+
+function hpTampil(){
+  var tgl=$('hpTgl').value, shift=$('hpShift').value;
+  var box=$('hpList');
+  $('hpMsg').textContent='';
+  if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
+  box.innerHTML='Memuat...';
+  apiGet({action:'extEditList', tgl:tgl, shift:shift}).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+    HAPUS_CACHE=res.items||[];
+    if(!HAPUS_CACHE.length){ box.innerHTML='Tidak ada data.'; return; }
+    box.innerHTML=HAPUS_CACHE.map(function(it,idx){
+      return '<div class="ul-item">'+
+        '<div class="t">'+esc(it.carsheet)+' | '+esc(it.ukuran)+' | '+fmtN(it.berat)+' kg</div>'+
+        '<div class="s">EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+'</div>'+
+        '<div class="s">KR: '+esc(it.nama)+'</div>'+
+        '<button type="button" style="background:#B91C1C" onclick="hpHapus('+idx+')">🗑 Hapus</button>'+
+        '</div>';
+    }).join('');
+  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+}
+
+function hpHapus(idx){
+  var it=HAPUS_CACHE[idx];
+  if(!it) return;
+  if(!confirm('Hapus data carsheet '+it.carsheet+' ('+it.ukuran+', '+fmtN(it.berat)+' kg)? Data tidak bisa dikembalikan.')) return;
+  var msg=$('hpMsg');
+  msg.className=''; msg.textContent='Menghapus...';
+  apiGet({action:'extHapus', payload:JSON.stringify({row:it.row, carsheet:it.carsheet})}).then(function(res){
+    if(res.ok){
+      msg.className='ok'; msg.textContent='✅ Data dihapus.';
+      hpTampil();
+    }else{
+      msg.className='bad'; msg.textContent='❌ Gagal: '+(res.error||'tidak diketahui');
+    }
+  }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
+}
+
+/* ===== PULIHKAN ===== */
+
+function kitirPulihkan(){
+  var raw=null;
+  try{ raw=localStorage.getItem(KITIR_KEY); }catch(e){}
+  if(!raw) return;
+  try{
+    kitirState=JSON.parse(raw);
+    kitirIsiPreview(kitirState.data,false);
+    kitirTampilSudahSimpan();
+    $('msg').textContent='Ada data tersimpan. Tekan Cetak jika struk belum keluar, atau Kosongkan Form untuk input baru.';
+    $('msg').className='ok';
+  }catch(e){ kitirState=null; try{ localStorage.removeItem(KITIR_KEY); }catch(_){} }
+}
+
+$('pin').focus();
+</script>
+</body>
+</html>
